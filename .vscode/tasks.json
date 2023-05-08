@@ -7,10 +7,22 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
+                "${workspaceFolder}\\src\\*.cpp",
+                "-I",
+                "${workspaceFolder}\\include",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${workspaceFolder}\\bin\\main.exe",
+                // "-fexec-charset=GBK",
+                // "-std=gun11",
             ],
+            // "args": [
+            //     "-fdiagnostics-color=always",
+            //     "-g",
+            //     "${workspaceFolder}\\src\\main.cpp",
+            //     "-o",
+            //     "${workspaceFolder}\\bin\\main.exe",
+            //     "-fexec-charset=GBK",
+            // ],
             "options": {
                 "cwd": "${fileDirname}"
             },
@@ -21,7 +33,33 @@
                 "kind": "build",
                 "isDefault": true
             },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
             "detail": "调试器生成的任务。"
+        },
+        {
+            "type": "shell",
+            "label": "run main",
+            "dependsOn": "cppbuild",
+            "command": "${workspaceFolder}\\bin\\main.exe",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
         }
     ],
     "version": "2.0.0"
