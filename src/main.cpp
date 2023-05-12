@@ -1,6 +1,9 @@
 #include <iostream>
 #include <ctime>
 
+#include <valarray>
+
+
 #include "..\\include\\config.h"
 #include "..\\include\\baseUser.h"
 #include "..\\include\\good.h"
