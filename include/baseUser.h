@@ -1,91 +1,57 @@
-#ifndef BASEH_
-#define BASEH_
+#ifndef BASE_USER_H_
+#define BASE_USER_H_
 
 #include "config.h"
-#include <string>
-#include <iostream>
 
-#include "good.h"
-#include "order.h"
-
-using std::string;
+using namespace LLL;
 
 class BaseUser
 {
-public:
-    enum class size {
-        ID = 6, 
-        NAME = 30, 
-        PASSWORD = 20, 
-        TELEPHONE = 20, 
-        ADDRESS = 60
-    };
-    enum class serialNum {
-        ID, NAME, TELEPHONE, ADDRESS, PASSWORD, ALL
-    };
 private:
-    
-    ;
-protected:
     char * m_ID;
     char * m_name;
     string m_password;
     string m_telephone;
     string m_address;
-    const BaseUser & ReadALineFromFile(ifstream & fin);
-    bool SearchAllOrderByString(const string & subString, const serialNum n);       //这不是order,是user
-    
-
-    ;
 public:
-    /**
-     *  @brief  Base constructor.
-     * 
-     *  Description...
-    */
     BaseUser();
-    BaseUser(const BaseUser & bsusr);
-
-    /**
-     *  @brief  Base destructor.
-     * 
-     *  Description...
-    */
+    BaseUser(const BaseUser & bsu);
+    const BaseUser & operator=(const BaseUser & bsu);
     virtual ~BaseUser();
 
-    BaseUser & operator=(const BaseUser & bsUsr);
+    // char * getID();
+    // char * getName();
+    // string & getPassword();
+    // string & getTelephone();
+    // string & getAddress();
 
-    /**
-     *  @brief  Modify personal information.
-     *  @param  ..
-     *  @return ture on success, false on failure.
-     * 
-     *  Description...
-    */
-    bool ModifyInformation(const string & subString, const serialNum n, const string & modifyString);
+    const string getID() const {return m_ID;}
+    const string getName() const {return m_name;}
+    const string getPassword() const {return m_password;}
+    const string getTelephone() const {return m_telephone;}
+    const string getAdress() const {return m_address;}
 
-    /**
-     *  @brief  View personal information.
-     *  @param  ..
-     *  @return void
-     * 
-     * Description...
-    */
-    virtual void ViewInformation();
-
-    virtual void ViewGood(const string & subString, const Good::serialNum n) const;
-    virtual void ViewOrder(const string & subString, const Order::serialNum n) const;
+    bool setID(const string & id) {strcpy(m_ID, id.c_str()); return true;}
+    bool setName(const string & name) {strcpy(m_name, name.c_str()); return true;}
+    bool setPassword(const string & password) {m_password = password; return true;}
+    bool setTelephone(const string & telephone) {m_telephone = telephone; return true;}
+    bool setAdress(const string & address) {m_address = address; return true;}
 
 
+    virtual bool ModifyInformation() {return true;}
+    virtual void ViewInformation() const { }
 
-    friend std::ostream & operator<<(std::ostream & os, const BaseUser & bsUsr);
-    friend std::ofstream & operator<<(std::ofstream & os, const BaseUser & bsUsr);
-    
-    ;
+
+
 };
 
 
 
-
-
 #endif
+
+
+
+
+
+
+

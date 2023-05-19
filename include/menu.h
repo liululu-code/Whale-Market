@@ -1,5 +1,7 @@
+#ifndef MENU_H_
+#define MENU_H_
 #include <iostream>
-
+#include "user.h"
 
 using std::cout;
 using std::endl;
@@ -15,8 +17,6 @@ void IAmBuyer(User & usr);
 void IAmSeller(User & usr);
 void PersonalInfoManage(User & usr);
 
-
-
 int SystemMainMenu();
 int AdminMainMenu();
 int BuyerMainMenu();
@@ -25,6 +25,10 @@ int PersonalInfoManageMenu();
 int SellerMainMenu();
 
 
+bool SellerPublishGood(const User usr);
+bool SellerModifyGood(const User usr);
 
+bool PersonalInformationModify(User & usr);
+void PersonalInfoManage(User & usr);
 
-
+#endif

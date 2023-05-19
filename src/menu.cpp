@@ -1,23 +1,20 @@
 
-
-#include <iostream>
-#include <fstream>
-
-
-#include "..\\include\\good.h"
-#include "..\\include\\order.h"
-#include "..\\include\\user.h"
 #include "menu.h"
+// #include "user.h"
+#include "userManager.h"
+#include "goodManager.h"
+#include "orderManager.h"
+// #include "config.h"
 
 int SelectOperation(int operationNum)
 {
     std::cout << "Please input 1-" << operationNum << ": ";
     int selection;
-    std::cin >> selection;
+    (std::cin >> selection).get();
     while (selection < 1 || selection > operationNum)
     {
         std::cout << "Please input 1-" << operationNum << ": ";
-        std::cin >> selection;
+        (std::cin >> selection).get();
     }
     return selection;
 }
@@ -29,28 +26,10 @@ void UserLogIn()
     std::cin >> name;
     std::cout << "请输入密码： ";
     std::cin >> passwd;
-    User usr;
-    int pass = 0;
-    ifstream fin(USER_FILE_NAME, std::ios_base::in);
-    if (!fin.is_open())
-    {
-        cout << "open file fault" << USER_FILE_NAME << endl;
-        exit(EXIT_FAILURE);
-    }
-    usr.ReadALineFromFile(fin);
-    while (!fin.eof())
-    {
-        #ifdef DEBUG
-            // cout << "test: " << name << ":" << passwd << "|" << usr.getName() << ":" << usr.getPassword() << endl;
-        #endif
-        if (!(strcmp(usr.getName().c_str(), name) || strcmp(usr.getPassword().c_str(), passwd)))
-        {
-            pass = 1;
-            break;
-        }
-        usr.ReadALineFromFile(fin);
-    }
-    if (pass == 1)
+
+    User usr = usrm.VerifyUser(name, passwd);
+    
+    if (usr.getPassword() != "NULL")
     {
         std::cout << "******登陆成功！******" << std::endl;
     }
@@ -59,9 +38,7 @@ void UserLogIn()
         std::cout << "账号或密码错误，返回系统主菜单" << endl;
         return;
     }
-    fin.close();
 
-    string str;
     int selection = 0;
     while (1)
     {
@@ -91,7 +68,16 @@ void UserLogIn()
 
 void UserSignIn()
 {
-
+    string name, passwd;
+    cout << "请输入用户名: ";
+    getline(cin, name);
+    cout << "请输入密码: ";
+    getline(cin, passwd);
+    User u;
+    u.setName(name);
+    u.setPassword(passwd);
+    usrm.AddUser(u);
+    usrm.WriteToFile();
 }
 
 void AdminLogIn()
@@ -112,36 +98,35 @@ void AdminLogIn()
         return;
     }
 
-    Admin ad;
-    string str;
     int selection;
+    string tmp;
     while (1)
     {
         switch (selection = SelectOperation(AdminMainMenu()))
         {
         case 1:
-            ad.ViewAllGood();
+            gdm.ViewAllGood();
             break;
         case 2:
             cout << "请输入商品名称: ";
-            cin >> str;
-            ad.SearchAllGood(str, Good::serialNum::NAME);
+            cin >> tmp;
+            gdm.SearchGood(tmp);
             break;
         case 3:
-            ad.ViewAllOrder();
+            odm.ViewAllOrder();
             break;
         case 4:
-            ad.ViewAllUser();
+            usrm.ViewAllUser();
             break;
         case 5:
             cout << "请输入用户ID: ";
-            cin >> str;
-            ad.DeleteUser(str);
+            cin >> tmp;
+            usrm.DeleteUser(tmp);
             break;
         case 6:
             cout << "请输入下架商品ID: ";
-            cin >> str;
-            ad.WithdrawGood(str);
+            cin >> tmp;
+            gdm.WithdrawPublishedGood(tmp);
             break;
         case 7:
             break;
@@ -155,65 +140,82 @@ void AdminLogIn()
     }
 }
 
-void IAmSeller(User & usr)
+bool SellerPublishGood(const User usr)
 {
-    int selection = 0;
-    // User usr;
-    Good gd;
-    Order odr;
     string name, description, id;
     double price;
-    Good::serialNum n;
+    cout << "请输入商品名称: ";
+    getline(cin, name);
+    cout << "请输入商品金额: ";
+    (cin >> price).get();
+    cout << "请输入商品描述: ";
+    std::getline(cin, description);
+
+    Good gd("NULL", name, price, description, usr.getID(), "NULL");
+    usr.seller.PublishGood(gd);
+    return true;
+}
+
+bool SellerModifyGood(const User usr)
+{
+    int t;
+    string id, description;
+    double price;
+    cout << "请输入修改商品ID: ";
+    cin >> id;
+    Good oldGood = gdm.SearchGoodByID(id);
+    Good newGood = oldGood;
+    cout << "请输入修改商品属性(1.价格 2.描述): ";
+    cin >> t;
+    switch (t)
+    {
+    case 1:
+        cout << "请输入修改商品价格: ";
+        (cin >> price).get();
+        newGood.setPrice(price);
+        break;
+    case 2:
+        cout << "请输入修改商品描述: ";
+        cin >> description;
+        newGood.setDescription(description);
+        break;
+    default:
+        break;
+    }
+
+    if (gdm.ModifyPublishedGoodInfo(usr.getID(), oldGood, newGood))
+    {
+        cout << "修改成功！！！" << endl;
+    }
+    return true;
+}
+
+
+
+void IAmSeller(User & usr)
+{
+    int selection = 0; 
+    string tmp;
     while (1)
     {
         switch (selection = SelectOperation(SellerMainMenu()))
         {
         case 1:
-            cout << "请输入商品名称: ";
-            std::getline(cin, name);
-            cout << "请输入商品金额: ";
-            cin >> price;
-            cout << "请输入商品描述: ";
-            std::getline(cin, description);
-            gd.setName(name);
-            gd.setPrice(price);
-            gd.setDescription(description);
-            gd.setID();
-            gd.setPublisher(usr.getID());
-            gd.setState(string("销售中"));
-            usr.PublichGood(gd);
+            SellerPublishGood(usr);
             break;
         case 2:
-            gd.SearchAllGoodByString(usr.getID(), Good::serialNum::SELLER_ID);
+            usr.seller.ViewAllPublishedGood(usr.getID());
             break;
         case 3:
-            int t;
-            cout << "请输入修改商品ID: ";
-            cin >> id;
-            cout << "请输入修改商品属性(1.价格 2.描述): ";
-            cin >> t;
-            switch (t)
-            {
-            case 1:
-                n = Good::serialNum::PRICE;
-                break;
-            case 2:
-                n = Good::serialNum::DECRIPTION;
-                break;
-            default:
-                break;
-            }
-            cout << "请输入修改商品价格: ";
-            cin >> price;
-            gd.ModifyGood(id, n, std::to_string(price));
+            SellerModifyGood(usr);
             break;
         case 4:
             cout << "请输入要下架的商品ID: ";
-            cin >> id;
-            gd.WithdrawGood(id);
+            cin >> tmp;
+            usr.seller.WithdrawPublishedGood(tmp);
             break;
         case 5:
-            odr.SearchAllOrderByString(usr.getID(), Order::serialNum::ID_SELLER);
+            usr.seller.ViewOrderHistory(usr.getID());
             break;
         case 6:
             break;
@@ -230,9 +232,6 @@ void IAmSeller(User & usr)
 void IAmBuyer(User & usr)
 {
     int selection = 0;
-    // User usr;           //必须是保存登陆用户的数据
-    Good gd;
-    Order odr;
     string id, name;
     // double price;
     // Good::serialNum n;
@@ -241,26 +240,25 @@ void IAmBuyer(User & usr)
         switch (selection = SelectOperation(BuyerMainMenu()))
         {
         case 1:
-            gd.SearchAllGoodByString("销售中", Good::serialNum::STATE);
+            usr.buyer.ViewAllGood();
             break;
         case 2:
             cout << "请输入商品ID: ";
-            cin >> id;
-            gd.BuyerGood(id, usr.getID());
+            (cin >> id).get();
+            usr.buyer.BuyGood(usr.getID(), id);
             break;
         case 3:
             cout << "请输入商品名称: ";
             cin >> name;
-            gd.SearchAllGoodByString(name, Good::serialNum::NAME);
+            usr.buyer.SearchGood(name);
             break;
         case 4:
-            odr.SearchAllOrderByString(usr.getID(), Order::serialNum::ID_BUYER);
+            usr.buyer.ViewOrderHistory(usr.getID());
             break;
         case 5:
             cout << "请输入您想查看的商品ID: ";
-            cin >> id;
-            gd.ViewGoodInfo(id);
-            // gd.SearchAllGoodByString(id, Good::serialNum::ID);
+            getline(cin, id);
+            usr.buyer.ViewGoodInformation(id);
             break;
         case 6:
             break;
@@ -274,12 +272,37 @@ void IAmBuyer(User & usr)
     }
 }
 
+bool PersonalInformationModify(User & usr)
+{
+    string newValue;
+    cout << "请选择修改的属性(1.用户名 2.联系方式 3.地址): ";
+    int sel;
+    (cin >> sel).get();
+    cout << "请输入修改值： ";
+    (cin >> newValue).get();
+    User newUser = usr;
+    switch (sel)
+    {
+    case 1:
+        newUser.setName(newValue);
+        break;
+    case 2:
+        newUser.setTelephone(newValue);
+        break;
+    case 3:
+        newUser.setAdress(newValue);
+        break;
+    default:
+        break;
+    }
+    usrm.ModifyUser(usr, newUser);
+    return true;
+}
+
 void PersonalInfoManage(User & usr)
 {
     int selection = 0;
-    // User usr;
     Good gd;
-    // Order odr;
     string str;
     while (1)
     {
@@ -288,34 +311,19 @@ void PersonalInfoManage(User & usr)
         case 1:
             break;
         case 2:
-            cout << "请选择修改的属性（1.用户名 2.联系方式 3.地址）: ";
-            int sel;
-            cin >> sel;
-            cout << "请输入修改值： ";
-            cin >> str;
-            switch (sel)
-            {
-            case 1:
-                usr.ModifyInformation(User::serialNum::NAME, str);
-                break;
-            case 2:
-                usr.ModifyInformation(User::serialNum::TELEPHONE, str);
-                break;
-            case 3:
-                usr.ModifyInformation(User::serialNum::ADDRESS, str);
-                break;
-            default:
-                break;
-            }
+            PersonalInformationModify(usr);
             break;
         case 3:
-            usr.ViewInformation();
+            usrm.ViewUser(usr);
             break;
         case 4:
             cout << "请输入充值数目: ";
             double money;
-            cin >> money;
-            usr.Recharge(money);
+            (cin >> money).get();
+            if (usrm.SetBalance(usr.getID(), usr.buyer.getBalance() + money))
+            {
+                cout << "充值成功！！！" << endl;
+            }
             break;
         default:
             break;
@@ -382,3 +390,7 @@ int SellerMainMenu()
     std::cout << "==================================================================================" << std::endl;
     return 6;
 }
+
+
+
+
